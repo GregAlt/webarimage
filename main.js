@@ -1,16 +1,18 @@
 import * as THREE from 'three';
 import {loadGLTF} from "./loader.js";
+import {createOneShotTracker} from "./oneshottracker.js";
 
 document.addEventListener('DOMContentLoaded', () => {
   const startButton = document.getElementById('start-button');
   const status = document.getElementById('status');
-  const testWithoutImageTracking = false;
   const targetWidthInMeters = 0.2032;
   const renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera();
   const anchorObject = new THREE.Group();
   const imageContent = new THREE.Group();
+  const modelOrientation = new THREE.Group();
+  const oneShotTracker = createOneShotTracker(renderer, targetWidthInMeters);
   let imageBitmap;
   let session;
   let anchorSet = false;
@@ -24,9 +26,10 @@ document.addEventListener('DOMContentLoaded', () => {
   anchorObject.visible = false;
   anchorObject.matrixAutoUpdate = false;
   scene.add(anchorObject);
-  imageContent.rotation.x = -Math.PI / 2;
   imageContent.position.set(0, 0, targetWidthInMeters * 0.4);
+  modelOrientation.rotation.x = -Math.PI / 2;
   anchorObject.add(imageContent);
+  imageContent.add(modelOrientation);
 
   const start = async () => {
     startButton.disabled = true;
@@ -37,43 +40,57 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error('WebXR is not available in this browser.');
       }
 
-      const sessionInit = testWithoutImageTracking ? {} : {
-        requiredFeatures: ['image-tracking'],
+      session = await navigator.xr.requestSession('immersive-ar', {
+        optionalFeatures: ['image-tracking', 'camera-access'],
         trackedImages: [{image: imageBitmap, widthInMeters: targetWidthInMeters}],
-      };
-      session = await navigator.xr.requestSession('immersive-ar', sessionInit);
+      });
+      const imageTrackingEnabled = session.enabledFeatures?.includes('image-tracking') ?? false;
+      const cameraAccessEnabled = session.enabledFeatures?.includes('camera-access') ?? false;
+      if (!imageTrackingEnabled && !cameraAccessEnabled) {
+        await session.end();
+        throw new Error('This browser must enable WebXR image-tracking or camera-access to track the QR poster.');
+      }
+
       session.addEventListener('end', () => {
         anchorSet = false;
+        imageContent.rotation.y = 0;
+        oneShotTracker.reset();
         anchorObject.visible = false;
         startButton.disabled = false;
         status.textContent = 'AR session ended.';
       });
       await renderer.xr.setSession(session);
-      if (testWithoutImageTracking) {
-        anchorObject.matrix.makeTranslation(0, 0, -1);
-        anchorObject.matrixWorldNeedsUpdate = true;
-        anchorSet = true;
-        anchorObject.visible = true;
-        status.textContent = 'AR session active; model placed 1 m ahead. Image tracking is disabled.';
-      } else {
-        status.textContent = 'Point the camera at the poster to place the snowman.';
+      if (!imageTrackingEnabled) {
+        oneShotTracker.init(session);
       }
+      status.textContent = imageTrackingEnabled
+        ? 'Point the camera at the poster to place the snowman.'
+        : 'Point the camera at the poster to scan it once.';
 
       renderer.setAnimationLoop((time, frame) => {
-        if (frame && !testWithoutImageTracking) {
+        if (frame && !anchorSet) {
           const referenceSpace = renderer.xr.getReferenceSpace();
-          if (referenceSpace && !anchorSet) {
-            const imageResult = frame.getImageTrackingResults().find(
-              result => result.index === 0 && result.trackingState === 'tracked'
-            );
-            const pose = imageResult && frame.getPose(imageResult.imageSpace, referenceSpace);
+          if (referenceSpace) {
+            let anchorMatrix = null;
+            if (imageTrackingEnabled) {
+              const imageResult = frame.getImageTrackingResults().find(
+                result => result.index === 0 && result.trackingState === 'tracked'
+              );
+              const pose = imageResult && frame.getPose(imageResult.imageSpace, referenceSpace);
+              if (pose) {
+                anchorMatrix = new THREE.Matrix4().fromArray(pose.transform.matrix);
+              }
+            } else {
+              anchorMatrix = oneShotTracker.detect(time, frame, referenceSpace);
+            }
 
-            if (pose) {
-              anchorObject.matrix.fromArray(pose.transform.matrix);
+            if (anchorMatrix) {
+              anchorObject.matrix.copy(anchorMatrix);
               anchorObject.matrixWorldNeedsUpdate = true;
               anchorSet = true;
+              if (!imageTrackingEnabled) imageContent.rotation.y = -Math.PI / 2;
               anchorObject.visible = true;
-              status.textContent = 'Poster anchored.';
+              status.textContent = imageTrackingEnabled ? 'Poster anchored.' : 'QR detected; fallback anchor set.';
             }
           }
         }
@@ -91,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   Promise.all([
     loadGLTF('./snowman.glb'),
-    testWithoutImageTracking ? Promise.resolve(null) : (async () => {
+    (async () => {
       const image = new Image();
       image.src = './QR-For-Tracking.jpg';
       await image.decode();
@@ -100,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
   ]).then(([gltf, bitmap]) => {
     imageBitmap = bitmap;
     gltf.scene.scale.set(0.2, 0.2, 0.2);
-    imageContent.add(gltf.scene);
+    modelOrientation.add(gltf.scene);
     startButton.disabled = false;
     status.textContent = 'Ready to start AR.';
   }).catch(error => {
