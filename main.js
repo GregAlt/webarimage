@@ -26,8 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
   anchorObject.visible = false;
   anchorObject.matrixAutoUpdate = false;
   scene.add(anchorObject);
-  imageContent.position.set(0, 0, targetWidthInMeters * 0.4);
   modelOrientation.rotation.x = -Math.PI / 2;
+  modelOrientation.position.set(0, 0, targetWidthInMeters * 0.4);
   anchorObject.add(imageContent);
   imageContent.add(modelOrientation);
 
