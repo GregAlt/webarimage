@@ -1,23 +1,24 @@
 import * as THREE from 'three';
 import { MindARThree } from 'mindar-image-three'; 
+import {loadGLTF} from "./loader.js";
 
 document.addEventListener('DOMContentLoaded', () => {
   const start = async() => {
     // initialize MindAR 
     const mindarThree = new window.MINDAR.IMAGE.MindARThree({
       container: document.body,
-      imageTargetSrc: './course-banner.mind',
+      imageTargetSrc: 'qr.mind', // './course-banner.mind',
     });
     const {renderer, scene, camera} = mindarThree;
 
-    // create AR object
-    const geometry = new THREE.PlaneGeometry(1, 1);
-    const material = new THREE.MeshBasicMaterial({color: 0x00ffff, transparent: true, opacity: 0.5});
-    const plane = new THREE.Mesh(geometry, material);
+    const light = new THREE.HemisphereLight( 0xffffff, 0xbbbbff, 1 );
+    scene.add(light);
+    const snowman = await loadGLTF('./snowman.glb');
+    snowman.scene.position.set(0, -0.4, 0);
 
     // create anchor
     const anchor = mindarThree.addAnchor(0);
-    anchor.group.add(plane);
+    anchor.group.add(snowman.scene);
 
     // start AR
     await mindarThree.start();
