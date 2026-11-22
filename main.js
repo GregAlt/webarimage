@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera();
   const anchorObject = new THREE.Group();
-  const imageContent = new THREE.Group();
   const modelOrientation = new THREE.Group();
   const oneShotTracker = createOneShotTracker(renderer, targetWidthInMeters);
   let imageBitmap;
@@ -26,10 +25,12 @@ document.addEventListener('DOMContentLoaded', () => {
   anchorObject.visible = false;
   anchorObject.matrixAutoUpdate = false;
   scene.add(anchorObject);
-  modelOrientation.rotation.x = -Math.PI / 2;
-  modelOrientation.position.set(0, 0, targetWidthInMeters * 0.4);
-  anchorObject.add(imageContent);
-  imageContent.add(modelOrientation);
+  modelOrientation.rotation.set(-Math.PI / 2, 0, Math.PI / 2)
+  modelOrientation.position.set(0.1,0.1,0);
+  anchorObject.add(modelOrientation);
+
+  const axesHelper = new THREE.AxesHelper(1.0);
+  anchorObject.add(axesHelper); 
 
   const start = async () => {
     startButton.disabled = true;
@@ -53,7 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       session.addEventListener('end', () => {
         anchorSet = false;
-        imageContent.rotation.y = 0;
         oneShotTracker.reset();
         anchorObject.visible = false;
         startButton.disabled = false;
@@ -88,7 +88,6 @@ document.addEventListener('DOMContentLoaded', () => {
               anchorObject.matrix.copy(anchorMatrix);
               anchorObject.matrixWorldNeedsUpdate = true;
               anchorSet = true;
-              if (!imageTrackingEnabled) imageContent.rotation.y = -Math.PI / 2;
               anchorObject.visible = true;
               status.textContent = imageTrackingEnabled ? 'Poster anchored.' : 'QR detected; fallback anchor set.';
             }
