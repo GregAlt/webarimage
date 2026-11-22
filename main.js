@@ -26,11 +26,11 @@ document.addEventListener('DOMContentLoaded', () => {
   anchorObject.visible = false;
   anchorObject.matrixAutoUpdate = false;
   scene.add(anchorObject);
-  modelOrientation.rotation.set(-Math.PI / 2, 0, Math.PI / 2)
+  modelOrientation.rotation.set(-Math.PI / 2, 0, 0)
   anchorObject.add(modelOrientation);
 
-  // const axesHelper = new THREE.AxesHelper(1.0);
-  // anchorObject.add(axesHelper); 
+  const axesHelper = new THREE.AxesHelper(1.0);
+  anchorObject.add(axesHelper); 
 
   const start = async () => {
     startButton.disabled = true;
@@ -109,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadGLTF('./snowman.glb'),
     (async () => {
       const image = new Image();
-      image.src = './QR-For-Tracking.jpg';
+      image.src = './QR-For-Tracking.png';
       await image.decode();
       return createImageBitmap(image);
     })(),

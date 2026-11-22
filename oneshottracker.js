@@ -52,9 +52,8 @@ export function createOneShotTracker(renderer, physicalWidthMeters) {
     const pitch = Math.acos(vertScale) * Math.sign(topPx - bottomPx);
 
     // Match WebXR imageSpace basis (+X right, +Y surface normal out of poster, +Z down)
-    // Note: I found this instead! (+X down, +Y out, +Z left) -- due to portrait/landscape camera conventions
-    const zAxis = new THREE.Vector3(right2D.x, right2D.y, Math.sin(yaw)).normalize().negate();
-    const xAxis = new THREE.Vector3(-up2D.x, -up2D.y, Math.sin(pitch)).normalize();
+    const xAxis = new THREE.Vector3(right2D.x, right2D.y, Math.sin(yaw)).normalize();
+    const zAxis = new THREE.Vector3(-up2D.x, -up2D.y, Math.sin(pitch)).normalize();
     const yAxis = new THREE.Vector3().crossVectors(zAxis, xAxis).normalize();
     zAxis.crossVectors(xAxis, yAxis).normalize();
 
