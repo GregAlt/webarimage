@@ -29,8 +29,8 @@ document.addEventListener('DOMContentLoaded', () => {
   modelOrientation.rotation.set(-Math.PI / 2, 0, Math.PI / 2)
   anchorObject.add(modelOrientation);
 
-  const axesHelper = new THREE.AxesHelper(1.0);
-  anchorObject.add(axesHelper); 
+  // const axesHelper = new THREE.AxesHelper(1.0);
+  // anchorObject.add(axesHelper); 
 
   const start = async () => {
     startButton.disabled = true;
