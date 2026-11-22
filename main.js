@@ -27,7 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
   anchorObject.matrixAutoUpdate = false;
   scene.add(anchorObject);
   modelOrientation.rotation.set(-Math.PI / 2, 0, Math.PI / 2)
-  modelOrientation.position.set(0.1,0.1,0);
   anchorObject.add(modelOrientation);
 
   const axesHelper = new THREE.AxesHelper(1.0);
@@ -116,7 +115,8 @@ document.addEventListener('DOMContentLoaded', () => {
     })(),
   ]).then(([gltf, bitmap]) => {
     imageBitmap = bitmap;
-    gltf.scene.scale.set(0.2, 0.2, 0.2);
+    gltf.scene.scale.set(1, 1, 1); // gltf snowman is 1.6083m or about 5'3" tall, origin at center of base
+    gltf.scene.position.set(0, -0.2, 0);
     modelOrientation.add(gltf.scene);
     startButton.disabled = false;
     status.textContent = 'Ready to start AR.';
