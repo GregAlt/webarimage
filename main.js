@@ -123,17 +123,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   Promise.all([
     loadGLTF('./snowman.glb'),
+    loadGLTF('./sign.glb'),
     (async () => {
       const image = new Image();
       image.src = './QR-For-Tracking.png';
       await image.decode();
       return createImageBitmap(image);
     })(),
-  ]).then(([gltf, bitmap]) => {
+  ]).then(([snowman, sign, bitmap]) => {
     imageBitmap = bitmap;
-    gltf.scene.scale.set(1, 1, 1); // gltf snowman is 1.6083m or about 5'3" tall, origin at center of base
-    gltf.scene.position.set(0, -0.2, 0);
-    //modelOrientation.add(gltf.scene);
+    snowman.scene.scale.set(1, 1, 1); // gltf snowman is 1.6083m or about 5'3" tall, origin at center of base
+    snowman.scene.position.set(-1, -0.2, -1);
+    modelOrientation.add(snowman.scene);
+    sign.scene.scale.set(1.2, 1.2, 1.2);    
+    sign.scene.position.set(0, -0.2, 0);
+    modelOrientation.add(sign.scene);
     startButton.disabled = false;
     status.textContent = 'Ready to start AR.';
   }).catch(error => {
