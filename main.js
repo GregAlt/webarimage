@@ -25,6 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
   document.body.appendChild(renderer.domElement);
 
   scene.add(new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1));
+  scene.add(new THREE.AmbientLight(0xffffff, 1));
+  const signLight = new THREE.DirectionalLight(0xffffff, 1.5);
+  signLight.position.set(0, 2, 2);
+  scene.add(signLight);
   anchorObject.visible = false;
   anchorObject.matrixAutoUpdate = false;
   scene.add(anchorObject);
