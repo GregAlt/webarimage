@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const status = document.getElementById('status');
   const targetWidthInMeters = 0.168;
   const qrWidthWithoutBorderInMeters = 0.068; // measured from black pixel to black pixel
+  const targetOffsetInMeters = -0.04;
+  const qrOffsetInMeters = 0.09;
   const renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera();
@@ -29,8 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
   modelOrientation.rotation.set(-Math.PI / 2, 0, 0)
   anchorObject.add(modelOrientation);
 
-  // const axesHelper = new THREE.AxesHelper(1.0);
-  // anchorObject.add(axesHelper); 
+  const axesHelper = new THREE.AxesHelper(1.0);
+  anchorObject.add(axesHelper); 
 
   const start = async () => {
     startButton.disabled = true;
@@ -85,6 +87,20 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (anchorMatrix) {
+              // Force upright: keep yaw, force +90° pitch for wall, and zero out Z
+              const _pos = new THREE.Vector3();
+              const _quat = new THREE.Quaternion();
+              const _scale = new THREE.Vector3();
+              const _euler = new THREE.Euler();
+              anchorMatrix.decompose(_pos, _quat, _scale);
+              const _normal = (new THREE.Vector3(0, 1, 0)).applyQuaternion(_quat);
+              const yaw = Math.atan2(_normal.x, _normal.z); // use atan2 to avoid gimbal lock
+              _quat.setFromEuler(_euler.set(Math.PI / 2, yaw, 0, 'YXZ'));
+              const _right = new THREE.Vector3(1, 0, 0).applyQuaternion(_quat);
+              const rightShift = imageTrackingEnabled ? -targetOffsetInMeters : -qrOffsetInMeters;
+              _pos.add(_right.multiplyScalar(rightShift)); // shift anchor to center of poster
+              anchorMatrix.compose(_pos, _quat, _scale);              
+
               anchorObject.matrix.copy(anchorMatrix);
               anchorObject.matrixWorldNeedsUpdate = true;
               anchorSet = true;
@@ -117,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
     imageBitmap = bitmap;
     gltf.scene.scale.set(1, 1, 1); // gltf snowman is 1.6083m or about 5'3" tall, origin at center of base
     gltf.scene.position.set(0, -0.2, 0);
-    modelOrientation.add(gltf.scene);
+    //modelOrientation.add(gltf.scene);
     startButton.disabled = false;
     status.textContent = 'Ready to start AR.';
   }).catch(error => {
