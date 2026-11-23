@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const start = async () => {
     startButton.disabled = true;
     status.textContent = 'Starting AR...';
-
+    
     try {
       if (!navigator.xr) {
         throw new Error('WebXR is not available in this browser.');
@@ -106,6 +106,12 @@ document.addEventListener('DOMContentLoaded', () => {
               anchorSet = true;
               anchorObject.visible = true;
               status.textContent = imageTrackingEnabled ? 'Poster anchored.' : 'QR detected; fallback anchor set.';
+
+              const bgMusic = new Audio('Disco Santa Claus - Raindolls- 1978.mp3');
+              bgMusic.loop = true;
+              bgMusic.volume = 0.75;
+              bgMusic.currentTime = 35;
+              bgMusic.play().catch(err => console.warn('Audio blocked:', err));
             }
           }
         }
