@@ -5,7 +5,7 @@ import {createOneShotTracker} from "./oneshottracker.js";
 document.addEventListener('DOMContentLoaded', () => {
   const startButton = document.getElementById('start-button');
   const status = document.getElementById('status');
-  const targetWidthInMeters = 0.2032; // includes border around QR code (estimated 8 inches)
+  const targetWidthInMeters = 0.168;//0.2032; // includes border around QR code (estimated 8 inches)
   const qrWidthWithoutBorderInMeters = 0.156; // measured from black pixel to black pixel (15.6cm)
   const renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
   const scene = new THREE.Scene();
